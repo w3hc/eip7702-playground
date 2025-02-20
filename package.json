@@ -1,6 +1,6 @@
 {
   "name": "@w3hc/eip7702-playground",
-  "description": "",
+  "description": "Showcase EIP-7702",
   "version": "1.0.0",
   "author": {
     "name": "w3hc",
@@ -21,7 +21,7 @@
     "foundry",
     "smart-contracts",
     "solidity",
-    "template"
+    "eip7702"
   ],
   "private": true,
   "scripts": {
