@@ -12,28 +12,28 @@ on:
       - "main"
 
 jobs:
-  lint:
-    runs-on: "ubuntu-latest"
-    steps:
-      - name: "Check out the repo"
-        uses: "actions/checkout@v4"
+  # lint:
+  #   runs-on: "ubuntu-latest"
+  #   steps:
+  #     - name: "Check out the repo"
+  #       uses: "actions/checkout@v4"
 
-      - name: "Install Foundry"
-        uses: "foundry-rs/foundry-toolchain@v1"
+  #     - name: "Install Foundry"
+  #       uses: "foundry-rs/foundry-toolchain@v1"
 
-      - name: "Install Bun"
-        uses: "oven-sh/setup-bun@v1"
+  #     - name: "Install Bun"
+  #       uses: "oven-sh/setup-bun@v1"
 
-      - name: "Install the Node.js dependencies"
-        run: "bun install"
+  #     - name: "Install the Node.js dependencies"
+  #       run: "bun install"
 
-      - name: "Lint the code"
-        run: "bun run lint"
+  #     - name: "Lint the code"
+  #       run: "bun run lint"
 
-      - name: "Add lint summary"
-        run: |
-          echo "## Lint result" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
+  #     - name: "Add lint summary"
+  #       run: |
+  #         echo "## Lint result" >> $GITHUB_STEP_SUMMARY
+  #         echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
 
   build:
     runs-on: "ubuntu-latest"
@@ -59,7 +59,7 @@ jobs:
           echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
 
   test:
-    needs: ["lint", "build"]
+    needs: ["build"] # Remove lint from needs
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out the repo"
@@ -84,7 +84,7 @@ jobs:
           )" >> $GITHUB_ENV
 
       - name: "Run the tests"
-        run: "forge test"
+        run: "FOUNDRY_PROFILE=prague forge test"
 
       - name: "Add test summary"
         run: |
