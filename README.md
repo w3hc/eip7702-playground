@@ -2,7 +2,7 @@
 
 This repository demonstrates [EIP-7702](https://eip7702.io/): EOA Code Setting, a significant Ethereum upgrade introduced in [Pectra upgrade](https://ethereum.org/en/roadmap/pectra/#new-improvements).
 
-[View Asciinema demo](https://asciinema.org/a/704542)
+[View Asciinema demo](https://asciinema.org/a/704589)
 
 ## What is EIP-7702?
 
@@ -22,6 +22,33 @@ EIP-7702 allows Externally Owned Accounts (EOAs) to have code through a delegati
 - Granular permissions
 - Account abstraction features
 
+## Sponsored Transfer Example
+
+Our repository includes a complete example of gas sponsorship using EIP-7702:
+
+```solidity
+// Alice authorizes Sponsor contract
+bytes memory code = abi.encodePacked(hex"ef0100", address(sponsor));
+vm.etch(alice, code);  // Sets delegation code
+
+// Execute sponsored transfer where:
+// 1. Relayer pays gas
+// 2. Value comes from Alice
+// 3. Bob receives the transfer
+vm.prank(alice);
+address(alice).call{value: 1 ether}(
+    abi.encodeWithSelector(Sponsor.sponsoredTransfer.selector, bob)
+);
+```
+
+### Who Pays What
+
+| Party | Pays |
+|-------|------|
+| Alice | Transfer value (e.g., 1 ETH) |
+| Relayer | Gas fees |
+| Bob | Nothing (recipient) |
+
 ## Technical Details
 
 ### Delegation Format
@@ -34,12 +61,15 @@ bytes memory delegationCode = abi.encodePacked(
 
 ### Example Usage
 ```solidity
-// Create a demonstrator contract
-EIP7702Demonstrator demonstrator = new EIP7702Demonstrator();
+// Create a sponsor contract
+Sponsor sponsor = new Sponsor();
 
 // Set delegation on EOA (only works in Prague+)
-bytes memory code = abi.encodePacked(hex"ef0100", address(demonstrator));
+bytes memory code = abi.encodePacked(hex"ef0100", address(sponsor));
 vm.etch(eoa, code);  // Sets delegation code
+
+// Any call to EOA is delegated to sponsor contract
+// but executes in EOA's context
 ```
 
 ## Testing
@@ -56,9 +86,10 @@ FOUNDRY_PROFILE=shanghai forge test
 
 ### Test Structure
 
-- `src/EIP7702Demonstrator.sol`: Example contract for delegation
-- `src/EIP7702Test.sol`: Helper contract for testing
-- `test/EIP7702Support.t.sol`: Test suite demonstrating EIP-7702
+- `src/Sponsor.sol`: Example contract for gas sponsorship
+- `src/EIP7702Demonstrator.sol`: Helper contract for demonstrations
+- `test/SponsoredTransferTest.t.sol`: Test suite showing sponsored transfers
+- `test/EIP7702Support.t.sol`: Test suite for EVM version compatibility
 
 ## Prerequisites
 
@@ -77,7 +108,7 @@ forge install
 forge build
 
 # Test with specific EVM version
-FOUNDRY_PROFILE=prague forge test
+FOUNDRY_PROFILE=prague forge test -vvv
 ```
 
 ### Deploy
@@ -118,6 +149,18 @@ For instructions on how to deploy to a testnet or mainnet, check out the
 | Set EOA Code | ✅ | ❌ |
 | Code Size | 23 bytes | 0 bytes |
 | Delegation | Supported | Not Supported |
+| Gas Sponsorship | ✅ | ❌ |
+
+## Example Test Output
+
+```
+=== EIP-7702 Sponsored Transfer Details ===
+Delegation code size: 23
+Gas used: 68690
+Value transferred: 1000000000000000000
+Sender (Alice) balance change: 1000000000000000000
+Recipient (Bob) balance change: 1000000000000000000
+```
 
 ## Support
 
