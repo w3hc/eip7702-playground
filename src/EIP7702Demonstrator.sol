@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.28;
+pragma solidity ^0.8.28;
 
-/// @title EIP7702Demonstrator
-/// @notice A contract that demonstrates the functionality of EIP-7702
+/// @title EIP-7702 Demonstrator
+/// @notice Helper contract to demonstrate EIP-7702 functionality
+/// @dev Provides utilities for checking EOA code status
 contract EIP7702Demonstrator {
-    event CodeExecuted(address origin, address caller);
-
-    /// @notice Demonstrates execution in the context of an EOA
-    /// @dev This function shows that tx.origin can have code and msg.sender can equal tx.origin
-    function demonstrateExecution() external {
-        emit CodeExecuted(tx.origin, msg.sender);
+    /// @notice Get the code size of an account
+    /// @param account The address to check
+    /// @return The size of the code at the address
+    function getCodeLength(address account) external view returns (uint256) {
+        uint256 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size;
     }
 }
