@@ -43,7 +43,7 @@ contract Deploy is BaseScript {
             block.chainid,
             address(demonstrator),
             0 // nonce
-        ) returns (bytes memory auth) {
+        ) returns (bytes memory) {
             console2.log("Successfully created test authorization");
         } catch Error(string memory reason) {
             console2.log("Failed to create authorization:", reason);
