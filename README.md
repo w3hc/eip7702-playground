@@ -1,6 +1,8 @@
-# EIP-7702 Demonstration
+# EIP-7702 Playground
 
 This repository demonstrates [EIP-7702](https://eip7702.io/): EOA Code Setting, a significant Ethereum upgrade introduced in [Pectra upgrade](https://ethereum.org/en/roadmap/pectra/#new-improvements).
+
+[View Asciinema demo](https://asciinema.org/a/704542)
 
 ## What is EIP-7702?
 
