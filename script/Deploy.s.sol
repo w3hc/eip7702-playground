@@ -3,12 +3,13 @@ pragma solidity >=0.8.28 <0.9.0;
 
 import { EIP7702Demonstrator } from "../src/EIP7702Demonstrator.sol";
 import { EIP7702Test } from "../src/EIP7702Test.sol";
+import { Sponsor } from "../src/Sponsor.sol";
 import { BaseScript } from "./Base.s.sol";
 import { console2 } from "forge-std/src/console2.sol";
 
 /// @dev Deployment script for EIP-7702 demonstration contracts
 contract Deploy is BaseScript {
-    function run() public broadcast returns (EIP7702Demonstrator demonstrator, EIP7702Test test) {
+    function run() public broadcast returns (EIP7702Demonstrator demonstrator, EIP7702Test test, Sponsor sponsor) {
         // Check EVM version supports EIP-7702
         string memory evmVersion = vm.envOr("FOUNDRY_PROFILE", string("default"));
         require(
@@ -24,27 +25,43 @@ contract Deploy is BaseScript {
         test = new EIP7702Test();
         console2.log("EIP7702Test deployed at:", address(test));
 
-        // Verify deployment was successful
+        // Deploy the sponsor contract
+        sponsor = new Sponsor();
+        console2.log("Sponsor deployed at:", address(sponsor));
+
+        // Verify deployments were successful
         require(address(demonstrator) != address(0), "Demonstrator deployment failed");
         require(address(test) != address(0), "Test deployment failed");
+        require(address(sponsor) != address(0), "Sponsor deployment failed");
 
         // Verify contracts have the expected code
         uint256 demonstratorSize;
         uint256 testSize;
+        uint256 sponsorSize;
         assembly {
             demonstratorSize := extcodesize(demonstrator)
             testSize := extcodesize(test)
+            sponsorSize := extcodesize(sponsor)
         }
         require(demonstratorSize > 0, "Demonstrator has no code");
         require(testSize > 0, "Test helper has no code");
+        require(sponsorSize > 0, "Sponsor has no code");
 
-        // Create a test authorization to verify EIP-7702 functionality
+        // Create a test authorization for the sponsor contract
         try test.createAuthorization(
             block.chainid,
-            address(demonstrator),
+            address(sponsor), // Using sponsor as the authorized contract
             0 // nonce
-        ) returns (bytes memory) {
-            console2.log("Successfully created test authorization");
+        ) returns (bytes memory auth) {
+            console2.log("Successfully created test authorization for sponsor");
+
+            // Log the authorization details
+            console2.log("Authorization length:", auth.length);
+            console2.log("Target contract:", address(sponsor));
+
+            // Create the delegation designator that would be used
+            bytes memory delegationDesignator = abi.encodePacked(hex"ef0100", address(sponsor));
+            console2.log("Delegation designator length:", delegationDesignator.length);
         } catch Error(string memory reason) {
             console2.log("Failed to create authorization:", reason);
         }
