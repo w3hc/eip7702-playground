@@ -80,6 +80,37 @@ forge build
 FOUNDRY_PROFILE=prague forge test
 ```
 
+### Deploy
+
+First, start a local Anvil node:
+
+```sh
+$ anvil
+```
+
+Then in a new terminal, deploy using one of the following commands:
+
+Deploy with default (Prague) settings:
+```sh
+$ forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
+```
+
+Deploy with Prague profile explicitly:
+```sh
+$ FOUNDRY_PROFILE=prague forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
+```
+
+Deploy with Shanghai profile:
+```sh
+$ FOUNDRY_PROFILE=shanghai forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
+```
+
+For these scripts to work, you need to have a `MNEMONIC` environment variable set to a valid
+[BIP39 mnemonic](https://iancoleman.io/bip39/).
+
+For instructions on how to deploy to a testnet or mainnet, check out the
+[Solidity Scripting](https://book.getfoundry.sh/guides/scripting-with-solidity) tutorial.
+
 ## Key Differences: Prague vs Shanghai
 
 | Feature | Prague | Shanghai |
