@@ -27,25 +27,29 @@ contract Sponsor {
     error NonceAlreadyUsed();
 
     /**
-     * @notice Tracks gas spent by each sender when using sponsored transactions
-     * @dev Can be used for accounting or limiting sponsored gas usage
+     * @dev ERC-7201 storage namespace for Sponsor contract
+     * @custom:storage-location erc7201:sponsor.storage
      */
-    mapping(address => uint256) public gasSpent;
+    struct SponsorStorage {
+        // Tracks gas spent by each sender when using sponsored transactions
+        mapping(address => uint256) gasSpent;
+        // Tracks the next valid nonce for each sender
+        mapping(address => uint256) nonces;
+    }
+
+    // keccak256(abi.encode(uint256(keccak256("sponsor.storage")) - 1)) & ~bytes32(uint256(0xff));
+    bytes32 private constant SPONSOR_STORAGE_LOCATION =
+        0xa185f0c1eeeb9abcce3ff812824b81cc825ec30cf022a2ea6a53b4f45b576600;
 
     /**
-     * @notice Tracks the next valid nonce for each sender
-     * @dev Used to prevent replay attacks through the incrementing nonce pattern
+     * @dev Get the sponsor storage
      */
-    mapping(address => uint256) public nonces;
-
-    /**
-     * @notice Emitted when a sponsored transfer is successfully executed
-     * @param sender The original sender (EOA) who authorized the transfer
-     * @param recipient The recipient who received the funds
-     * @param amount The amount of ETH transferred
-     * @param gasUsed The amount of gas consumed by the transaction
-     */
-    event SponsoredTransfer(address indexed sender, address indexed recipient, uint256 amount, uint256 gasUsed);
+    function _getSponsorStorage() private pure returns (SponsorStorage storage s) {
+        bytes32 position = SPONSOR_STORAGE_LOCATION;
+        assembly {
+            s.slot := position
+        }
+    }
 
     /// @notice Type hash for EIP-712 signature of sponsored transfers
     bytes32 public constant SPONSORED_TRANSFER_TYPEHASH =
@@ -71,6 +75,24 @@ contract Sponsor {
     }
 
     /**
+     * @notice Get gas spent by a specific address
+     * @param sender The address to check gas usage for
+     * @return Amount of gas used by the sender
+     */
+    function gasSpent(address sender) external view returns (uint256) {
+        return _getSponsorStorage().gasSpent[sender];
+    }
+
+    /**
+     * @notice Get the current nonce for a specific address
+     * @param sender The address to check nonce for
+     * @return Current nonce value for the sender
+     */
+    function nonces(address sender) external view returns (uint256) {
+        return _getSponsorStorage().nonces[sender];
+    }
+
+    /**
      * @notice Execute a transfer on behalf of a user who provided a valid signature
      * @dev Verifies EIP-712 signature, transfers ETH, and records gas usage
      * @param sender The address that authorized the transfer
@@ -93,8 +115,10 @@ contract Sponsor {
         external
         payable
     {
+        SponsorStorage storage sponsorStorage = _getSponsorStorage();
+
         // Ensure nonce is not reused
-        if (nonce != nonces[sender]++) revert NonceAlreadyUsed();
+        if (nonce != sponsorStorage.nonces[sender]++) revert NonceAlreadyUsed();
 
         // Compute expected message hash
         bytes32 digest = keccak256(
@@ -118,8 +142,17 @@ contract Sponsor {
 
         // Calculate and record gas usage
         uint256 gasUsed = startGas - gasleft();
-        gasSpent[sender] += gasUsed;
+        sponsorStorage.gasSpent[sender] += gasUsed;
 
         emit SponsoredTransfer(sender, recipient, amount, gasUsed);
     }
+
+    /**
+     * @notice Emitted when a sponsored transfer is successfully executed
+     * @param sender The original sender (EOA) who authorized the transfer
+     * @param recipient The recipient who received the funds
+     * @param amount The amount of ETH transferred
+     * @param gasUsed The amount of gas consumed by the transaction
+     */
+    event SponsoredTransfer(address indexed sender, address indexed recipient, uint256 amount, uint256 gasUsed);
 }
