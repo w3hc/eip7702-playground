@@ -122,24 +122,24 @@ FOUNDRY_PROFILE=prague forge test -vvv
 First, start a local Anvil node:
 
 ```sh
-$ anvil
+anvil
 ```
 
 Then in a new terminal, deploy using one of the following commands:
 
 Deploy with default (Prague) settings:
 ```sh
-$ forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
+forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
 ```
 
 Deploy with Prague profile explicitly:
 ```sh
-$ FOUNDRY_PROFILE=prague forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
+FOUNDRY_PROFILE=prague forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
 ```
 
 Deploy with Shanghai profile:
 ```sh
-$ FOUNDRY_PROFILE=shanghai forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
+FOUNDRY_PROFILE=shanghai forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
 ```
 
 For these scripts to work, you need to have a `MNEMONIC` environment variable set to a valid
