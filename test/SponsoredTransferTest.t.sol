@@ -52,11 +52,35 @@ contract SponsoredTransferTest is Test {
         // Track gas usage
         uint256 gasBefore = gasleft();
 
+        // Get the current nonce
+        uint256 nonce = sponsor.nonces(alice);
+
+        // Create signature for EIP-712
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                sponsor.DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(sponsor.SPONSORED_TRANSFER_TYPEHASH(), alice, bob, 1 ether, nonce))
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
+
         // Create the call data for the sponsored transfer
-        bytes memory callData = abi.encodeWithSelector(Sponsor.sponsoredTransfer.selector, bob);
+        bytes memory callData = abi.encodeWithSelector(
+            Sponsor.sponsoredTransfer.selector,
+            alice,
+            bob,
+            1 ether,
+            nonce,
+            v,
+            r, // signature r
+            s // signature s
+        );
 
         // Execute as Alice but with relayer paying gas
         vm.prank(alice);
+
         // Call directly to Alice's account which should delegate to sponsor via EIP-7702
         (bool success,) = address(alice).call{ value: 1 ether }(callData);
         require(success, "Call failed");

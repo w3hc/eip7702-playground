@@ -23,8 +23,30 @@ contract SponsorTest is Test {
 
     // Basic functionality test - no EIP-7702 features
     function testBasicSponsorFunctionality() public {
+        // Create a private key and derive the address
+        uint256 alicePrivateKey = 0xA11CE;
+        address derivedAliceAddress = vm.addr(alicePrivateKey);
+
+        // Replace alice with the derived address
+        alice = payable(derivedAliceAddress);
+        vm.deal(alice, 2 ether); // Fund the correct address
+
+        // Now proceed with your test
         vm.prank(alice);
-        sponsor.sponsoredTransfer{ value: 1 ether }(bob);
+        uint256 nonce = sponsor.nonces(alice);
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                sponsor.DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(sponsor.SPONSORED_TRANSFER_TYPEHASH(), alice, bob, 1 ether, nonce))
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
+
+        sponsor.sponsoredTransfer{ value: 1 ether }(alice, bob, 1 ether, nonce, v, r, s);
+
         assertEq(bob.balance, 1 ether);
     }
 }
