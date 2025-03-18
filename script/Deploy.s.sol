@@ -7,8 +7,20 @@ import { Sponsor } from "../src/Sponsor.sol";
 import { BaseScript } from "./Base.s.sol";
 import { console2 } from "forge-std/src/console2.sol";
 
-/// @dev Deployment script for EIP-7702 demonstration contracts
+/**
+ * @title Deploy
+ * @notice Deployment script for EIP-7702 demonstration contracts
+ * @dev Handles deployment and initial setup of all contracts needed for EIP-7702 demos
+ * @custom:eip EIP-7702 (EOA Code Setting)
+ */
 contract Deploy is BaseScript {
+    /**
+     * @notice Deploy and set up all EIP-7702 demonstration contracts
+     * @dev Checks for Prague EVM support, deploys contracts, and creates a test authorization
+     * @return demonstrator The deployed EIP7702Demonstrator contract
+     * @return test The deployed EIP7702Test helper contract
+     * @return sponsor The deployed Sponsor contract
+     */
     function run() public broadcast returns (EIP7702Demonstrator demonstrator, EIP7702Test test, Sponsor sponsor) {
         // Check EVM version supports EIP-7702
         string memory evmVersion = vm.envOr("FOUNDRY_PROFILE", string("default"));

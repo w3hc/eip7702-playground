@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-/// @title EIP-7702 Demonstrator
-/// @notice Helper contract to demonstrate EIP-7702 functionality
-/// @dev Provides utilities for checking EOA code status
+/**
+ * @title EIP7702Demonstrator
+ * @notice Utility contract for demonstrating and testing EIP-7702 functionality
+ * @dev Provides functions to inspect EOA code properties with EIP-7702 delegation
+ * @custom:eip EIP-7702 (EOA Code Setting)
+ */
 contract EIP7702Demonstrator {
-    /// @notice Get the code size of an account
-    /// @param account The address to check
-    /// @return The size of the code at the address
+    /**
+     * @notice Get the code size of any account
+     * @dev Uses assembly to directly access the extcodesize opcode
+     * @param account The address to check code size for
+     * @return The size of the code at the given address in bytes
+     */
     function getCodeLength(address account) external view returns (uint256) {
         uint256 size;
         assembly {
