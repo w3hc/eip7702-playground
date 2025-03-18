@@ -5,9 +5,12 @@ import "forge-std/src/Test.sol";
 import "../src/Sponsor.sol";
 import "../src/EIP7702Demonstrator.sol";
 
-/// @title Sponsored Transfer Test
-/// @notice Tests EIP-7702 functionality with gas sponsorship
-/// @dev Shows how EOAs can execute transactions through a sponsor without paying gas
+/**
+ * @title SponsoredTransferTest
+ * @notice Tests EIP-7702 functionality with gas sponsorship
+ * @dev Demonstrates how EOAs can execute transactions through delegation without paying gas
+ * @custom:eip EIP-7702 (EOA Code Setting), EIP-712 (Typed structured data hashing and signing)
+ */
 contract SponsoredTransferTest is Test {
     Sponsor public sponsor;
     EIP7702Demonstrator public demonstrator;
@@ -16,6 +19,11 @@ contract SponsoredTransferTest is Test {
     address payable public relayer;
     uint256 public aliceKey;
 
+    /**
+     * @notice Set up the test environment
+     * @dev Deploys contracts and sets up test accounts
+     * @custom:requirement Requires Prague EVM version to support EIP-7702
+     */
     function setUp() public {
         // Check EVM version
         string memory evmVersion = vm.envOr("FOUNDRY_PROFILE", string("default"));
@@ -39,7 +47,14 @@ contract SponsoredTransferTest is Test {
         vm.deal(relayer, 1 ether);
     }
 
-    /// @notice Test a sponsored transfer using EIP-7702
+    /**
+     * @notice Test a sponsored transfer using EIP-7702 delegation
+     * @dev Demonstrates complete EIP-7702 workflow:
+     *      1. Setting delegation code on an EOA
+     *      2. Creating a valid EIP-712 signature
+     *      3. Executing a transaction through the delegated code
+     *      4. Verifying correct balance changes
+     */
     function testSponsoredTransfer() public {
         // Initial balances
         uint256 aliceBalanceBefore = alice.balance;
@@ -52,11 +67,35 @@ contract SponsoredTransferTest is Test {
         // Track gas usage
         uint256 gasBefore = gasleft();
 
+        // Get the current nonce
+        uint256 nonce = sponsor.nonces(alice);
+
+        // Create signature for EIP-712
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                sponsor.DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(sponsor.SPONSORED_TRANSFER_TYPEHASH(), alice, bob, 1 ether, nonce))
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
+
         // Create the call data for the sponsored transfer
-        bytes memory callData = abi.encodeWithSelector(Sponsor.sponsoredTransfer.selector, bob);
+        bytes memory callData = abi.encodeWithSelector(
+            Sponsor.sponsoredTransfer.selector,
+            alice,
+            bob,
+            1 ether,
+            nonce,
+            v,
+            r, // signature r
+            s // signature s
+        );
 
         // Execute as Alice but with relayer paying gas
         vm.prank(alice);
+
         // Call directly to Alice's account which should delegate to sponsor via EIP-7702
         (bool success,) = address(alice).call{ value: 1 ether }(callData);
         require(success, "Call failed");
@@ -76,12 +115,15 @@ contract SponsoredTransferTest is Test {
         console2.log("Recipient (Bob) balance change:", bob.balance - bobBalanceBefore);
     }
 
-    /// @notice Test behavior in Shanghai (should fail)
+    /**
+     * @notice Test behavior in Shanghai (should fail)
+     * @dev Verifies that EIP-7702 functionality is not available in pre-Prague EVM versions
+     */
     function testNoCodeInShanghai() public {
         string memory evmVersion = vm.envOr("FOUNDRY_PROFILE", string("default"));
         if (keccak256(bytes(evmVersion)) == keccak256(bytes("shanghai"))) {
-            bytes memory code = abi.encodePacked(hex"ef0100", address(sponsor));
-            vm.etch(alice, code);
+            bytes memory delegationCode = abi.encodePacked(hex"ef0100", address(sponsor));
+            vm.etch(alice, delegationCode);
             vm.expectRevert();
             (bool success,) = alice.call{ value: 1 ether }("");
             success; // Silence unused variable warning

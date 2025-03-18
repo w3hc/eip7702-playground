@@ -5,17 +5,36 @@ import "forge-std/src/Test.sol";
 import "../src/EIP7702Demonstrator.sol";
 import "../src/EIP7702Test.sol";
 
+/**
+ * @title EIP7702SupportTest
+ * @notice Test contract verifying EIP-7702 functionality across different EVM versions
+ * @dev Tests whether EOA code setting works as expected in different EVM versions (Prague vs Shanghai)
+ * @custom:eip EIP-7702 (EOA Code Setting)
+ */
 contract EIP7702SupportTest is Test {
     EIP7702Demonstrator public demonstrator;
     EIP7702Test public testHelper;
 
+    /**
+     * @notice Emitted when code is executed on an EOA through delegation
+     * @param origin The original transaction sender
+     * @param caller The address calling the code
+     */
     event CodeExecuted(address origin, address caller);
 
+    /**
+     * @notice Set up the test environment
+     * @dev Deploys the necessary contracts for testing
+     */
     function setUp() public {
         demonstrator = new EIP7702Demonstrator();
         testHelper = new EIP7702Test();
     }
 
+    /**
+     * @notice Tests EIP-7702 support in different EVM versions
+     * @dev Checks if code can be set on an EOA in Prague (should work) vs Shanghai (should fail)
+     */
     function testEVMVersionSupport() public {
         string memory evmVersion = vm.envString("FOUNDRY_PROFILE");
         address eoa = makeAddr("testEOA");
