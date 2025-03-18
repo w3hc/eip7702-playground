@@ -80,8 +80,14 @@ The repository includes tests that verify EIP-7702 functionality across differen
 # Should pass - Prague supports EIP-7702
 FOUNDRY_PROFILE=prague forge test
 
+# Alternatively
+pnpm test
+
 # Should fail - Shanghai doesn't support EIP-7702
 FOUNDRY_PROFILE=shanghai forge test
+
+# Alternatively
+pnpm test:shanghai
 ```
 
 ### Test Structure
