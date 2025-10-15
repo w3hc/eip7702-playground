@@ -1,12 +1,14 @@
 # EIP-7702 Playground
 
-This repository demonstrates [EIP-7702](https://eip7702.io/): EOA Code Setting, a significant Ethereum upgrade introduced in [Pectra upgrade](https://ethereum.org/en/roadmap/pectra/#new-improvements).
+This repository demonstrates [EIP-7702](https://eip7702.io/): EOA Code Setting, a significant Ethereum upgrade
+introduced in [Pectra upgrade](https://ethereum.org/en/roadmap/pectra/#new-improvements).
 
 [View Asciinema demo](https://asciinema.org/a/704589)
 
 ## What is EIP-7702?
 
-EIP-7702 allows Externally Owned Accounts (EOAs) to have code through a delegation mechanism. This brings smart contract capabilities to EOAs without requiring users to migrate to new accounts.
+EIP-7702 allows Externally Owned Accounts (EOAs) to have code through a delegation mechanism. This brings smart contract
+capabilities to EOAs without requiring users to migrate to new accounts.
 
 ### Key Features
 
@@ -43,15 +45,16 @@ address(alice).call{value: 1 ether}(
 
 ### Who Pays What
 
-| Party | Pays |
-|-------|------|
-| Alice | Transfer value (e.g., 1 ETH) |
-| Relayer | Gas fees |
-| Bob | Nothing (recipient) |
+| Party   | Pays                         |
+| ------- | ---------------------------- |
+| Alice   | Transfer value (e.g., 1 ETH) |
+| Relayer | Gas fees                     |
+| Bob     | Nothing (recipient)          |
 
 ## Technical Details
 
 ### Delegation Format
+
 ```solidity
 bytes memory delegationCode = abi.encodePacked(
     hex"ef0100",        // EIP-7702 magic bytes
@@ -60,6 +63,7 @@ bytes memory delegationCode = abi.encodePacked(
 ```
 
 ### Example Usage
+
 ```solidity
 // Create a sponsor contract
 Sponsor sponsor = new Sponsor();
@@ -104,6 +108,7 @@ pnpm test:shanghai
 ## Installation
 
 ```bash
+pnpm i
 forge install
 ```
 
@@ -128,16 +133,19 @@ anvil
 Then in a new terminal, deploy using one of the following commands:
 
 Deploy with default (Prague) settings:
+
 ```sh
 forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
 ```
 
 Deploy with Prague profile explicitly:
+
 ```sh
 FOUNDRY_PROFILE=prague forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
 ```
 
 Deploy with Shanghai profile:
+
 ```sh
 FOUNDRY_PROFILE=shanghai forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
 ```
@@ -150,12 +158,12 @@ For instructions on how to deploy to a testnet or mainnet, check out the
 
 ## Key Differences: Prague vs Shanghai
 
-| Feature | Prague | Shanghai |
-|---------|---------|-----------|
-| Set EOA Code | ✅ | ❌ |
-| Code Size | 23 bytes | 0 bytes |
-| Delegation | Supported | Not Supported |
-| Gas Sponsorship | ✅ | ❌ |
+| Feature         | Prague    | Shanghai      |
+| --------------- | --------- | ------------- |
+| Set EOA Code    | ✅        | ❌            |
+| Code Size       | 23 bytes  | 0 bytes       |
+| Delegation      | Supported | Not Supported |
+| Gas Sponsorship | ✅        | ❌            |
 
 ## Example Test Output
 
@@ -167,6 +175,60 @@ Value transferred: 1000000000000000000
 Sender (Alice) balance change: 1000000000000000000
 Recipient (Bob) balance change: 1000000000000000000
 ```
+
+## Scanner
+
+This repository includes scanning tools to detect which networks support EIP-7702.
+
+### EIP-7702 Network Scanner (`eip7702_scanner.sh`)
+
+Automated tool that scans all EVM-compatible networks from chainid.network to detect EIP-7702 support:
+
+```bash
+# Make script executable and run the complete scan
+chmod +x eip7702_scanner.sh
+./eip7702_scanner.sh
+```
+
+The scanner tests each network's RPC endpoints using EIP-7702 state override syntax with `eth_estimateGas` calls. It
+generates three files:
+
+- **[`eip7702-networks.md`](./eip7702-networks.md)** - Detailed markdown report with all supported networks
+- **[`eip7702-chain-ids.txt`](./eip7702-chain-ids.txt)** - Simple text file listing supported chain IDs
+- **[`eip7702-networks.ts`](./eip7702-networks.ts)** - TypeScript export for integration
+
+### Chain Status Checker (`check_chain_status.sh`)
+
+Tool to check the operational status of individual chains:
+
+```bash
+# Make script executable
+chmod +x check_chain_status.sh
+
+# Check status of a specific chain
+./check_chain_status.sh <chain_id>
+
+# Examples
+./check_chain_status.sh 1      # Ethereum Mainnet
+./check_chain_status.sh 10     # Optimism
+./check_chain_status.sh 8453   # Base
+```
+
+This tool provides:
+
+- Chain metadata (name, native currency, TVL)
+- RPC endpoint testing
+- Block production verification
+- Transaction activity analysis
+
+### Generated Files
+
+The scanner creates the following output files:
+
+- **[`eip7702-networks.md`](./eip7702-networks.md)** - Human-readable report with network details and verification
+  instructions
+- **[`eip7702-networks.txt`](./eip7702-networks.txt)** - Plain text list of supported chain IDs (one per line)
+- **[`eip7702-networks.ts`](./eip7702-networks.ts)** - TypeScript array export for programmatic use
 
 ## Support
 
