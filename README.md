@@ -104,6 +104,7 @@ pnpm test:shanghai
 ## Installation
 
 ```bash
+pnpm i
 forge install
 ```
 
